@@ -10,6 +10,8 @@ import {
   contactInboxModel,
   contactModel,
   conversationModel,
+  questionnaireModel,
+  questionnaireSubmissionModel,
 } from "../../schema"
 import { likeContains } from "../../utils"
 import { buildContinentWhere } from "./continent"
@@ -55,6 +57,11 @@ const hasWhereParts = (where: ContactWhere): boolean =>
 const conversationExists = joinTableExists(
   conversationModel,
   conversationModel.contactId,
+)
+
+const questionnaireSubmissionExists = joinTableExists(
+  questionnaireSubmissionModel,
+  questionnaireSubmissionModel.contactId,
 )
 
 const toStringArrayValue = (value: unknown): string[] =>
@@ -373,6 +380,30 @@ function buildConditionWhere(condition: FilterConditionInput): ContactWhere {
     case "subscribedToDripCampaign":
     case "entryPointsLinks":
       return buildRelationSetWhere(field, operator, value)
+
+    case "questionnaireStarted":
+      return buildExistsBooleanWhere(
+        questionnaireSubmissionExists,
+        sql`${questionnaireSubmissionModel.questionnaireId} IN (SELECT ${questionnaireModel.id} FROM ${questionnaireModel} WHERE ${questionnaireModel.workspaceId} = ${questionnaireSubmissionModel.workspaceId})`,
+        operator,
+        value,
+      )
+
+    case "questionnaireInProgress":
+      return buildExistsBooleanWhere(
+        questionnaireSubmissionExists,
+        sql`${questionnaireSubmissionModel.status} = 'inProgress' AND ${questionnaireSubmissionModel.questionnaireId} IN (SELECT ${questionnaireModel.id} FROM ${questionnaireModel} WHERE ${questionnaireModel.workspaceId} = ${questionnaireSubmissionModel.workspaceId})`,
+        operator,
+        value,
+      )
+
+    case "questionnaireFinished":
+      return buildExistsBooleanWhere(
+        questionnaireSubmissionExists,
+        sql`${questionnaireSubmissionModel.status} = 'completed' AND ${questionnaireSubmissionModel.questionnaireId} IN (SELECT ${questionnaireModel.id} FROM ${questionnaireModel} WHERE ${questionnaireModel.workspaceId} = ${questionnaireSubmissionModel.workspaceId})`,
+        operator,
+        value,
+      )
 
     case "conversationAssigned":
       return buildConversationAssignedWhere(operator, value)

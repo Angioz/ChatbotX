@@ -1,0 +1,196 @@
+"use client"
+
+import { DataTableColumnHeader } from "@chatbotx.io/ui/components/data-table/data-table-column-header"
+import { Button } from "@chatbotx.io/ui/components/ui/button"
+import { Checkbox } from "@chatbotx.io/ui/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@chatbotx.io/ui/components/ui/dropdown-menu"
+import { Switch } from "@chatbotx.io/ui/components/ui/switch"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@chatbotx.io/ui/components/ui/tooltip"
+import type { DataTableRowAction } from "@chatbotx.io/ui/types/data-table"
+import type { ColumnDef } from "@tanstack/react-table"
+import {
+  CopyPlusIcon,
+  EllipsisVerticalIcon,
+  ListChecksIcon,
+  TextIcon,
+  Trash2Icon,
+} from "lucide-react"
+import Link from "next/link"
+import type { useTranslations } from "next-intl"
+import { useAction } from "next-safe-action/hooks"
+import type { Dispatch, SetStateAction } from "react"
+import { toast } from "sonner"
+import { toggleQuestionnaireActiveAction } from "../actions/toggle-questionnaire-active.action"
+import type { QuestionnaireListItem } from "../schemas/resource"
+
+type Props = {
+  t: ReturnType<typeof useTranslations>
+  setRowAction: Dispatch<
+    SetStateAction<DataTableRowAction<QuestionnaireListItem> | null>
+  >
+}
+
+export function getQuestionnaireColumns({
+  t,
+  setRowAction,
+}: Props): ColumnDef<QuestionnaireListItem>[] {
+  return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          aria-label={t("actions.selectAll")}
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          className="translate-y-0.5"
+          onCheckedChange={(value) =>
+            table.toggleAllPageRowsSelected(Boolean(value))
+          }
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          aria-label={t("actions.selectRow")}
+          checked={row.getIsSelected()}
+          className="translate-y-0.5"
+          onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
+        />
+      ),
+      size: 40,
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      id: "name",
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("fields.name.label")} />
+      ),
+      cell: ({ row }) => (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              className="inline-block max-w-[320px] truncate font-medium"
+              href={`/space/${row.original.workspaceId}/questionnaires/${row.original.id}/edit`}
+            >
+              {row.original.name}
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>{row.original.name}</TooltipContent>
+        </Tooltip>
+      ),
+      meta: {
+        label: t("fields.name.label"),
+        placeholder: t("fields.name.searchPlaceholder"),
+        variant: "text",
+      },
+      enableColumnFilter: true,
+      enableSorting: true,
+    },
+    {
+      id: "applicantsCount",
+      accessorKey: "applicantsCount",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t("questionnaires.applicants")}
+        />
+      ),
+      cell: ({ row }) => row.original.applicantsCount,
+      enableSorting: false,
+    },
+    {
+      id: "active",
+      accessorKey: "active",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={t("fields.status.label")}
+        />
+      ),
+      cell: ({ row }) => {
+        const { execute, isPending } = useAction(
+          toggleQuestionnaireActiveAction.bind(
+            null,
+            row.original.workspaceId,
+            row.original.id,
+          ),
+          {
+            onError: ({ error }) => {
+              if (error.serverError) {
+                toast.error(error.serverError)
+              }
+            },
+          },
+        )
+        return (
+          <Switch
+            checked={row.original.active}
+            disabled={isPending}
+            onCheckedChange={(active) => execute({ active })}
+          />
+        )
+      },
+      enableSorting: false,
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              aria-label={t("actions.openMenu")}
+              className="size-8 p-0"
+              variant="ghost"
+            >
+              <EllipsisVerticalIcon className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link
+                href={`/space/${row.original.workspaceId}/questionnaires/${row.original.id}/applicants`}
+              >
+                <ListChecksIcon />
+                {t("questionnaires.applicants")}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setRowAction({ row, variant: "rename" })}
+            >
+              <TextIcon />
+              {t("actions.rename")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setRowAction({ row, variant: "duplicate" })}
+            >
+              <CopyPlusIcon />
+              {t("actions.duplicate")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => setRowAction({ row, variant: "delete" })}
+              variant="destructive"
+            >
+              <Trash2Icon />
+              {t("actions.delete")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      size: 50,
+      enableSorting: false,
+      enableHiding: false,
+    },
+  ]
+}

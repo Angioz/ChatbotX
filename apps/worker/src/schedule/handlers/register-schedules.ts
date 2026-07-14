@@ -195,4 +195,18 @@ export const registerSchedules = async () => {
       },
     },
   )
+
+  await scheduleQueue.upsertJobScheduler(
+    ScheduleJobData.scanQuestionnaireTimeout,
+    {
+      pattern: "*/15 * * * *",
+    },
+    {
+      name: ScheduleJobData.scanQuestionnaireTimeout,
+      data: {
+        type: ScheduleJobData.scanQuestionnaireTimeout,
+        data: {},
+      },
+    },
+  )
 }

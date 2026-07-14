@@ -126,6 +126,34 @@ class ConversationService extends BaseService {
     })
   }
 
+  async updateChallenge(props: {
+    workspaceId: string
+    conversationId: string
+    challenge: unknown | undefined
+  }): Promise<void> {
+    const conversation = await this.findByUncached({
+      where: { id: props.conversationId, workspaceId: props.workspaceId },
+    })
+    if (!conversation) {
+      throw notFoundException("Conversation not found")
+    }
+
+    await db
+      .update(conversationModel)
+      .set({
+        additionalAttributes: {
+          ...(conversation.additionalAttributes as Record<string, unknown>),
+          challenge: props.challenge,
+        },
+      })
+      .where(
+        and(
+          eq(conversationModel.id, props.conversationId),
+          eq(conversationModel.workspaceId, props.workspaceId),
+        ),
+      )
+  }
+
   async findByContactWithInboxes(props: {
     contactId: string
     workspaceId: string

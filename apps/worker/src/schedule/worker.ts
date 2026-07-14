@@ -27,6 +27,7 @@ import { reconcileTenants } from "./handlers/reconcile-tenants"
 import { refreshZaloTokens } from "./handlers/refresh-zalo-tokens"
 import { registerSchedules } from "./handlers/register-schedules"
 import { scanCoexistRuns } from "./handlers/scan-coexist-runs"
+import { scanQuestionnaireTimeout } from "./handlers/scan-questionnaire-timeout"
 import { scanSmartDelay } from "./handlers/scan-smart-delay"
 import { syncUserQuota } from "./handlers/sync-user-quota"
 
@@ -115,6 +116,10 @@ async function startScheduleWorker() {
 
         case ScheduleJobData.refreshZaloTokens:
           await refreshZaloTokens()
+          return
+
+        case ScheduleJobData.scanQuestionnaireTimeout:
+          await scanQuestionnaireTimeout()
           return
 
         default:

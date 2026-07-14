@@ -24,6 +24,7 @@ export const ScheduleJobData = {
   scanCoexistRuns: "scanCoexistRuns",
   purgeCoexistStaging: "purgeCoexistStaging",
   refreshZaloTokens: "refreshZaloTokens",
+  scanQuestionnaireTimeout: "scanQuestionnaireTimeout",
 } as const
 
 export const broadcastSendJobId = (broadcastId: string) =>
@@ -120,6 +121,11 @@ export type ScheduleJobRefreshZaloTokens = {
   data: Record<string, never>
 }
 
+export type ScheduleJobScanQuestionnaireTimeout = {
+  type: typeof ScheduleJobData.scanQuestionnaireTimeout
+  data: Record<string, never>
+}
+
 export type ScheduleJobData =
   | ScheduleJobBroadcast
   | ScheduleJobEnqueueBroadcast
@@ -138,6 +144,7 @@ export type ScheduleJobData =
   | ScheduleJobScanCoexistRuns
   | ScheduleJobPurgeCoexistStaging
   | ScheduleJobRefreshZaloTokens
+  | ScheduleJobScanQuestionnaireTimeout
 
 export const scheduleQueue =
   process.env.NEXT_PHASE === "phase-production-build"

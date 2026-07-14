@@ -66,6 +66,7 @@ import {
   setMessengerUserPersistentMenu,
 } from "./messenger-user-menu"
 import { addOrUpdateMoosendContact } from "./moosend-handler"
+import { questionnaires } from "./questionnaires"
 import { sendEmail } from "./send-email"
 import { addSendGridContact } from "./sendgrid-handler"
 import { handleAISpeechToText } from "./speech-to-text"
@@ -426,6 +427,7 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.startExternalFlow]: startExternalFlow,
   [stepTypes.enum.chooseChannel]: undefined,
   [stepTypes.enum.filterContact]: undefined,
+  [stepTypes.enum.questionnaires]: questionnaires,
   [stepTypes.enum.subscribeBroadcast]: subscribeBroadcast,
   [stepTypes.enum.unsubscribeBroadcast]: unsubscribeBroadcast,
   [stepTypes.enum.splitTraffic]: splitTraffic,
