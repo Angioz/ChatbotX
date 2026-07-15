@@ -91,6 +91,7 @@ async function startIntegrationWorker() {
                   conversationId: conversation.id,
                   contactInboxId: message.contactInboxId,
                   messageId: message.id,
+                  workspaceId: conversation.workspaceId,
                 })
               }
             } else if (isNotPostbackOrQuickReply) {

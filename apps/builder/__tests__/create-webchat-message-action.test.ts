@@ -328,6 +328,26 @@ describe("handleCreateWebchatMessage", () => {
       contact,
     )
   })
+
+  test("enqueues automated response with workspace context for active text messages", async () => {
+    mockConversationEnsureActive.mockResolvedValue(true)
+
+    await handleCreateWebchatMessage({
+      parsedInput: {
+        text: "hello",
+        workspaceId: "ws-1",
+        webchatId: "webchat-1",
+        guestConversationId: "guest-1",
+      },
+    })
+
+    expect(mockAutomatedResponseEnqueue).toHaveBeenCalledWith({
+      conversationId: "conv-1",
+      contactInboxId: "ci-1",
+      messageId: "msg-1",
+      workspaceId: "ws-1",
+    })
+  })
 })
 
 describe("handleCreateWebchatMessage — MAC quota", () => {
