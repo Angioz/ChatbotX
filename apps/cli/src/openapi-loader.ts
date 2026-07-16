@@ -125,6 +125,45 @@ function extractPathParamNames(pathTemplate: string): string[] {
   return matches ? matches.map((m) => m.slice(1, -1)) : []
 }
 
+// Two DELETE paths on the same sub-resource (one item-level, one
+// collection-level) naturally derive the same commandName from
+// pathAndMethodToCommandName (both use the singular noun). This is only a
+// real collision when a sibling item-level DELETE exists — a lone
+// collection DELETE (e.g. "remove these tags") must keep its natural
+// ":delete" name untouched. Runs once, after the full tool list is built,
+// so it has the sibling visibility pathAndMethodToCommandName lacks.
+function resolveDeleteCollisions(tools: DynamicTool[]): void {
+  const byName = new Map<string, DynamicTool[]>()
+  for (const tool of tools) {
+    const bucket = byName.get(tool.commandName)
+    if (bucket) {
+      bucket.push(tool)
+    } else {
+      byName.set(tool.commandName, [tool])
+    }
+  }
+
+  for (const bucket of byName.values()) {
+    const deletes = bucket.filter((t) => t.method === "DELETE")
+    if (deletes.length !== 2) {
+      continue
+    }
+    const itemLevel = deletes.find((t) => t.pathTemplate.endsWith("}"))
+    const collectionLevel = deletes.find((t) => !t.pathTemplate.endsWith("}"))
+    if (!itemLevel || !collectionLevel) {
+      continue
+    }
+
+    const normalized = collectionLevel.pathTemplate
+      .replace(V1_PREFIX_RE, "")
+      .replace(LEADING_SLASH_RE, "")
+    const segments = normalized.split("/")
+    const groupName = segments[0]
+    const subResource = segments.at(-1)
+    collectionLevel.commandName = `${groupName}:${subResource}:clear`
+  }
+}
+
 export function pathAndMethodToCommandName(
   pathTemplate: string,
   method: string,
@@ -198,13 +237,12 @@ export function pathAndMethodToCommandName(
     return `${group}:${singular}:${verb}`
   }
   if (m === "delete") {
-    // Mirror the get/list distinction above: deleting one item (last segment
-    // is a param) vs clearing the whole sub-resource collection (it isn't)
-    // must not collapse to the same name (e.g. DELETE .../custom-fields/{id}
-    // vs DELETE .../custom-fields).
-    const sub = isLastRemainderParam ? singular : subResource
-    const verb = isLastRemainderParam ? "delete" : "clear"
-    return `${group}:${sub}:${verb}`
+    // Natural name — item-level and collection-level DELETE both land here.
+    // Any resulting collision (item vs collection on the same sub-resource)
+    // is resolved after the full tool list is built, in
+    // resolveDeleteCollisions() below — not here, since this function only
+    // sees one path at a time and can't tell if a sibling actually collides.
+    return `${group}:${singular}:delete`
   }
   if (m === "put" || m === "patch") {
     return `${group}:${subResource}:update`
@@ -321,6 +359,7 @@ export async function loadOpenApiSpecForCli(
     }
   }
 
+  resolveDeleteCollisions(tools)
   writeCache(specUrl, tools)
   return tools
 }
