@@ -3,11 +3,13 @@ import z from "zod"
 import { flowVersionResource } from "@/features/flow-versions/schema/resource"
 
 export const flowResource = createSelectSchema(flowModel, {
+  createdAt: z.coerce.date(),
   id: z.string(),
   workspaceId: z.string(),
   folderId: z.string().nullable(),
   currentVersionId: z.string().nullable(),
   draftVersionId: z.string().nullable(),
+  updatedAt: z.coerce.date(),
 })
 export type FlowResource = z.infer<typeof flowResource>
 
