@@ -110,6 +110,28 @@ describe("flow workspace-token API", () => {
     })
   })
 
+  test(
+    "get rejects a flow id that does not resolve in the token workspace",
+    async () => {
+      flowServiceMocks.getFlow.mockRejectedValue(new Error("Flow not found"))
+
+      await expect(
+        getHandler(
+          "GET",
+          "/v1/flows/{id}",
+        )({
+          context,
+          input: { id: "cross-workspace-flow" },
+        }),
+      ).rejects.toThrow("Flow not found")
+
+      expect(flowServiceMocks.getFlow).toHaveBeenCalledWith({
+        workspaceId: "workspace-a",
+        id: "cross-workspace-flow",
+      })
+    },
+  )
+
   test("update separates the path id and scopes the mutation", async () => {
     const flow = { id: "flow-1", name: "After" }
     flowServiceMocks.updateFlow.mockResolvedValue(flow)
