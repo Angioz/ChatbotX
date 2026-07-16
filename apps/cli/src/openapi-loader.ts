@@ -125,6 +125,45 @@ function extractPathParamNames(pathTemplate: string): string[] {
   return matches ? matches.map((m) => m.slice(1, -1)) : []
 }
 
+// Two DELETE paths on the same sub-resource (one item-level, one
+// collection-level) naturally derive the same commandName from
+// pathAndMethodToCommandName (both use the singular noun). This is only a
+// real collision when a sibling item-level DELETE exists — a lone
+// collection DELETE (e.g. "remove these tags") must keep its natural
+// ":delete" name untouched. Runs once, after the full tool list is built,
+// so it has the sibling visibility pathAndMethodToCommandName lacks.
+function resolveDeleteCollisions(tools: DynamicTool[]): void {
+  const byName = new Map<string, DynamicTool[]>()
+  for (const tool of tools) {
+    const bucket = byName.get(tool.commandName)
+    if (bucket) {
+      bucket.push(tool)
+    } else {
+      byName.set(tool.commandName, [tool])
+    }
+  }
+
+  for (const bucket of byName.values()) {
+    const deletes = bucket.filter((t) => t.method === "DELETE")
+    if (deletes.length !== 2) {
+      continue
+    }
+    const itemLevel = deletes.find((t) => t.pathTemplate.endsWith("}"))
+    const collectionLevel = deletes.find((t) => !t.pathTemplate.endsWith("}"))
+    if (!itemLevel || !collectionLevel) {
+      continue
+    }
+
+    const normalized = collectionLevel.pathTemplate
+      .replace(V1_PREFIX_RE, "")
+      .replace(LEADING_SLASH_RE, "")
+    const segments = normalized.split("/")
+    const groupName = segments[0]
+    const subResource = segments.at(-1)
+    collectionLevel.commandName = `${groupName}:${subResource}:clear`
+  }
+}
+
 export function pathAndMethodToCommandName(
   pathTemplate: string,
   method: string,
@@ -137,11 +176,16 @@ export function pathAndMethodToCommandName(
   const m = method.toLowerCase()
 
   if (segments.length === 1) {
+    // put/patch on the bare collection (no id segment) is a mass-update —
+    // named distinctly from the id-level "update" below so the two don't
+    // collide (e.g. PUT /v1/bot-fields vs PUT /v1/bot-fields/{idOrName}).
+    // "update-all" (not "bulk-update") to avoid colliding with a literal
+    // .../bulk-update action sub-path, which some groups also define.
     const actions: Record<string, string> = {
       get: SINGLETON_RESOURCES.has(group) ? "get" : "list",
       post: "create",
-      put: "update",
-      patch: "update",
+      put: "update-all",
+      patch: "update-all",
       delete: "delete",
     }
     return `${group}:${actions[m] ?? m}`
@@ -193,6 +237,11 @@ export function pathAndMethodToCommandName(
     return `${group}:${singular}:${verb}`
   }
   if (m === "delete") {
+    // Natural name — item-level and collection-level DELETE both land here.
+    // Any resulting collision (item vs collection on the same sub-resource)
+    // is resolved after the full tool list is built, in
+    // resolveDeleteCollisions() below — not here, since this function only
+    // sees one path at a time and can't tell if a sibling actually collides.
     return `${group}:${singular}:delete`
   }
   if (m === "put" || m === "patch") {
@@ -310,6 +359,7 @@ export async function loadOpenApiSpecForCli(
     }
   }
 
+  resolveDeleteCollisions(tools)
   writeCache(specUrl, tools)
   return tools
 }
