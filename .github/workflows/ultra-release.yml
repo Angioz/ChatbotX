@@ -45,6 +45,10 @@ jobs:
         id: short_sha
         run: echo "sha7=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
+      - name: Set built-at timestamp
+        id: built_at
+        run: echo "iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -67,3 +71,6 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.label }}
           cache-to: type=gha,mode=max,scope=${{ matrix.label }}
           platforms: ${{ env.BUILD_PLATFORMS }}
+          build-args: |
+            ULTRA_FORK_SHA=${{ github.sha }}
+            ULTRA_BUILT_AT=${{ steps.built_at.outputs.iso }}

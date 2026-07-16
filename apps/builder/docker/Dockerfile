@@ -68,6 +68,14 @@ WORKDIR /app
 # Build the application
 FROM base AS release
 
+# Fork deploy-proof: baked at image build time, read via process.env at runtime
+# by GET /api/v1/meta/version. Fresh `FROM base` stage, so these must be
+# declared here (not just in `deps`) to actually reach the running container.
+ARG ULTRA_FORK_SHA=dev
+ARG ULTRA_BUILT_AT
+ENV ULTRA_FORK_SHA=${ULTRA_FORK_SHA}
+ENV ULTRA_BUILT_AT=${ULTRA_BUILT_AT}
+
 COPY apps/builder/docker/rootfs/ /
 
 # Automatically leverage output traces to reduce image size

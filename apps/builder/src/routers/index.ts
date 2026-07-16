@@ -33,6 +33,7 @@ import { whatsappFlowAPIs } from "@/features/integration-whatsapp/flows/api"
 import { whatsappMessageTemplateAPIs } from "@/features/integration-whatsapp/message-templates/api"
 import { integrationsAPI } from "@/features/integrations/api"
 import { messagesAPI } from "@/features/messages/api"
+import { metaAPI } from "@/features/meta/api"
 import { personasAPIs } from "@/features/personas/api"
 import { platformCredentialsAPI } from "@/features/platform-credentials/api"
 import { productsAPI } from "@/features/products/api"
@@ -101,4 +102,5 @@ export const router = {
   triggersAPI,
   userPersistentMenusAPI,
   webhooksAPI,
+  metaAPI,
 }
