@@ -7,6 +7,8 @@ import {
 } from "@chatbotx.io/database/utils"
 import { assertCurrentUserCanAccessChatbot } from "@/lib/auth/utils"
 import type {
+  ErrorLogHealthRequest,
+  ErrorLogHealthResponse,
   ListErrorLogsRequest,
   ListErrorLogsResponse,
 } from "../schemas/query"
@@ -46,4 +48,32 @@ export async function listErrorLogs(
   const pageCount = Math.ceil(totalRows / pagination.limit)
 
   return { data, pageCount }
+}
+
+export async function getErrorLogHealth(
+  input: ErrorLogHealthRequest,
+): Promise<ErrorLogHealthResponse> {
+  await assertCurrentUserCanAccessChatbot(input.workspaceId)
+
+  const since = new Date(Date.now() - input.windowMinutes * 60_000)
+  const where = {
+    workspaceId: input.workspaceId,
+    createdAt: { gte: since },
+  }
+
+  const [errorCount, lastErrorLog] = await Promise.all([
+    db.$count(errorLogModel, relationsFilterToSQL(errorLogModel, where)),
+    db.query.errorLogModel.findFirst({
+      where,
+      orderBy: { createdAt: "desc" },
+      columns: { createdAt: true },
+    }),
+  ])
+
+  return {
+    windowMinutes: input.windowMinutes,
+    errorCount,
+    lastErrorAt: lastErrorLog?.createdAt ?? null,
+    healthy: errorCount === 0,
+  }
 }
