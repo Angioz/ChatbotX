@@ -1,4 +1,8 @@
-import { automatedResponseService, flowService } from "@chatbotx.io/business"
+import {
+  automatedResponseService,
+  flowService,
+  folderService,
+} from "@chatbotx.io/business"
 import { ChatbotXException } from "@chatbotx.io/business/errors"
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
@@ -50,6 +54,14 @@ const createKeywordWorkspaceTokenAPI = workspaceTokenAuthAPI
   .handler(async ({ context, input }) => {
     const workspaceId = context.workspace.id
 
+    if (input.folderId) {
+      await folderService.ensureExists({
+        id: input.folderId,
+        workspaceId,
+        folderType: "automatedResponse",
+      })
+    }
+
     let flowId: string | undefined = input.flowId ?? undefined
     let text: string | null | undefined = input.text
 
@@ -86,6 +98,14 @@ const updateKeywordWorkspaceTokenAPI = workspaceTokenAuthAPI
     const { id, ...parsedInput } = input
 
     await automatedResponseService.findOrFail({ workspaceId, id })
+
+    if (parsedInput.folderId) {
+      await folderService.ensureExists({
+        id: parsedInput.folderId,
+        workspaceId,
+        folderType: "automatedResponse",
+      })
+    }
 
     if (parsedInput.text?.length) {
       parsedInput.flowId = undefined
