@@ -2,6 +2,7 @@ import {
   and,
   asc,
   count,
+  type DatabaseClient,
   db,
   desc,
   eq,
@@ -28,13 +29,17 @@ import {
   messengerMessageTemplateModel,
   whatsappMessageTemplateModel,
 } from "@chatbotx.io/database/schema"
+import type { BroadcastModel } from "@chatbotx.io/database/types"
 import { chunkById } from "@chatbotx.io/database/utils"
 import { BaseService } from "../base.service"
+import { notFoundException } from "../errors"
 import { inboxService } from "../inbox/service"
 import type {
   BroadcastAudienceInput,
   BroadcastAudiencePreviewRow,
   BroadcastTemplateDetail,
+  CreateBroadcastInput,
+  UpdateBroadcastInput,
 } from "./schema"
 
 const DEFAULT_CHUNK_SIZE = 1000
@@ -45,7 +50,174 @@ const MAX_PREVIEW_PER_PAGE = 50
 type ContactInboxRow = typeof contactInboxModel.$inferSelect
 type SelectOptionRow = { id: string; name: string }
 
+// Truncates seconds/ms so schedulesAt lines up with the minute-granularity
+// scheduler, mirroring date-fns' startOfMinute() used by the action this was
+// ported from — inlined to avoid adding a new dependency to this package.
+const toStartOfMinute = (date: Date): Date => {
+  const truncated = new Date(date)
+  truncated.setSeconds(0, 0)
+  return truncated
+}
+
 class BroadcastService extends BaseService {
+  async getBroadcast(
+    input: { workspaceId: string; id: string },
+    tx?: DatabaseClient,
+  ): Promise<BroadcastModel> {
+    const client = tx ?? db
+    const broadcast = await client.query.broadcastModel.findFirst({
+      where: { id: input.id, workspaceId: input.workspaceId },
+    })
+    if (!broadcast) {
+      throw notFoundException("Broadcast not found")
+    }
+    return broadcast
+  }
+
+  // Ported from create-broadcast.action.ts (db.transaction at :122) — no
+  // session/user id is persisted anywhere on this path (broadcastModel has no
+  // createdBy column), so there is nothing to fabricate here.
+  async createBroadcast(
+    workspaceId: string,
+    input: CreateBroadcastInput,
+    tx?: DatabaseClient,
+  ): Promise<BroadcastModel> {
+    const client = tx ?? db
+    let name = "Broadcast"
+
+    // Never trust integration/flow/template ids from the client: they scope
+    // the audience and message content, so a foreign id would let a
+    // broadcast target another workspace's resources.
+    if (input.integrationMessengerId) {
+      const integration =
+        await client.query.integrationMessengerModel.findFirst({
+          where: { id: input.integrationMessengerId, workspaceId },
+          columns: { id: true },
+        })
+      if (!integration) {
+        throw notFoundException("Integration not found")
+      }
+    }
+
+    if (input.integrationWhatsappId) {
+      const integration =
+        await client.query.integrationWhatsappModel.findFirst({
+          where: { id: input.integrationWhatsappId, workspaceId },
+          columns: { id: true },
+        })
+      if (!integration) {
+        throw notFoundException("Integration not found")
+      }
+    }
+
+    if (input.flowId) {
+      const flow = await client.query.flowModel.findFirst({
+        where: { workspaceId, id: input.flowId },
+      })
+      if (!flow) {
+        throw notFoundException("Flow not found")
+      }
+      name = flow.name
+    }
+
+    if (input.templateId) {
+      if (input.channel === "messenger") {
+        const template =
+          await client.query.messengerMessageTemplateModel.findFirst({
+            where: {
+              id: input.templateId,
+              integrationMessengerId: input.integrationMessengerId ?? undefined,
+              integrationMessenger: { workspaceId },
+            },
+          })
+        if (!template) {
+          throw notFoundException("Template not found")
+        }
+        name = template.name
+      } else {
+        const template =
+          await client.query.whatsappMessageTemplateModel.findFirst({
+            where: {
+              id: input.templateId,
+              integrationWhatsapp: {
+                workspaceId,
+                id: input.integrationWhatsappId ?? undefined,
+              },
+            },
+          })
+        if (!template) {
+          throw notFoundException("Template not found")
+        }
+        name = template.name
+      }
+    }
+
+    const [broadcast] = await client
+      .insert(broadcastModel)
+      .values({
+        channel: input.channel,
+        flowId: input.flowId ?? null,
+        templateId: input.templateId ?? null,
+        integrationWhatsappId: input.integrationWhatsappId ?? null,
+        integrationMessengerId: input.integrationMessengerId ?? null,
+        subaction: input.subaction,
+        schedulesType: input.schedulesType,
+        contactFilter: input.contactFilter ?? null,
+        name,
+        workspaceId,
+        status: "scheduled",
+        schedulesAt: toStartOfMinute(new Date(input.schedulesAt ?? new Date())),
+        templateData: input.templateData
+          ? { ...input.templateData, buttons: input.buttons ?? [] }
+          : null,
+      })
+      .returning()
+
+    return broadcast
+  }
+
+  async updateBroadcast(
+    input: { workspaceId: string; id: string },
+    data: UpdateBroadcastInput,
+    tx?: DatabaseClient,
+  ): Promise<BroadcastModel> {
+    const client = tx ?? db
+    await this.getBroadcast(input, client)
+
+    const [broadcast] = await client
+      .update(broadcastModel)
+      .set(data)
+      .where(
+        and(
+          eq(broadcastModel.id, input.id),
+          eq(broadcastModel.workspaceId, input.workspaceId),
+        ),
+      )
+      .returning()
+
+    if (!broadcast) {
+      throw notFoundException("Broadcast not found")
+    }
+    return broadcast
+  }
+
+  async deleteBroadcast(
+    input: { workspaceId: string; id: string },
+    tx?: DatabaseClient,
+  ): Promise<void> {
+    const client = tx ?? db
+    await this.getBroadcast(input, client)
+
+    await client
+      .delete(broadcastModel)
+      .where(
+        and(
+          eq(broadcastModel.id, input.id),
+          eq(broadcastModel.workspaceId, input.workspaceId),
+        ),
+      )
+  }
+
   async listOptions(input: {
     workspaceId: string
     channel: ChannelType

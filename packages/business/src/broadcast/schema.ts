@@ -1,8 +1,27 @@
 import type {
+  BroadcastScheduleType,
   BroadcastSubaction,
   ChannelType,
 } from "@chatbotx.io/database/partials"
 import type { ContactFilterCriteriaInput } from "@chatbotx.io/database/queries"
+
+export type CreateBroadcastInput = {
+  channel: ChannelType
+  flowId?: string | null
+  templateId?: string | null
+  integrationWhatsappId?: string | null
+  integrationMessengerId?: string | null
+  templateData?: Record<string, unknown> | null
+  buttons?: { id: string; label: string; flowId?: string }[]
+  subaction: BroadcastSubaction
+  schedulesType: BroadcastScheduleType
+  schedulesAt: string | Date | null
+  contactFilter?: ContactFilterCriteriaInput | null
+}
+
+export type UpdateBroadcastInput = {
+  name: string
+}
 
 export type BroadcastAudienceInput = {
   workspaceId: string
