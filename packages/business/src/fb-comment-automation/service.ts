@@ -21,8 +21,10 @@ import {
 } from "@chatbotx.io/database/utils"
 import { createId } from "@chatbotx.io/utils"
 import { formatInTimeZone } from "date-fns-tz"
+import { aiAgentService } from "../ai-agent/service"
 import { BaseService } from "../base.service"
-import { notFoundException } from "../errors"
+import { ChatbotXException, notFoundException } from "../errors"
+import { flowService } from "../flow/service"
 import type { PaginatedResult } from "../types"
 
 export type CreateFbCommentAutomationInput = Pick<
@@ -49,11 +51,45 @@ export type ListFbCommentAutomationsInput = {
 }
 
 class FbCommentAutomationService extends BaseService {
+  private async assertReplyReferencesExist(
+    workspaceId: string,
+    reply: Pick<FBCommentAutomationModel["publicReply"], "type" | "value">,
+    tx?: DatabaseClient,
+  ): Promise<void> {
+    if (reply.type === "flow" && reply.value) {
+      const exists = await flowService.exists(workspaceId, reply.value, tx)
+      if (!exists) {
+        throw new ChatbotXException(
+          "Reply references a flow that does not exist in this workspace",
+          "invalidRequestData",
+          422,
+        )
+      }
+    }
+
+    if (reply.type === "AIAgent" && reply.value) {
+      const agent = await aiAgentService.findBy({
+        tx,
+        where: { id: reply.value, workspaceId },
+      })
+      if (!agent) {
+        throw new ChatbotXException(
+          "Reply references an AI agent that does not exist in this workspace",
+          "invalidRequestData",
+          422,
+        )
+      }
+    }
+  }
+
   async create(
     workspaceId: string,
     input: CreateFbCommentAutomationInput,
     tx?: DatabaseClient,
   ): Promise<FBCommentAutomationModel> {
+    await this.assertReplyReferencesExist(workspaceId, input.publicReply, tx)
+    await this.assertReplyReferencesExist(workspaceId, input.privateReply, tx)
+
     const client = tx ?? db
     const [record] = await client
       .insert(fbCommentAutomationModel)
