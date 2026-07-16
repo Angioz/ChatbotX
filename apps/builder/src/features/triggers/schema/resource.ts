@@ -5,6 +5,8 @@ export const triggerResource = createSelectSchema(triggerModel, {
   id: z.string(),
   workspaceId: z.string(),
   folderId: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
 }).extend({
   conditions: z.array(z.any()),
   actions: z.array(z.any()),
