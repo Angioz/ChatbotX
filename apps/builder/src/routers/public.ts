@@ -7,6 +7,7 @@ import contactWorkspaceTokenAPIs from "@/features/contacts/api/workspace-token"
 import conversationWorkspaceTokenAPIs from "@/features/conversations/api/workspace-token"
 import customFieldWorkspaceTokenAPIs from "@/features/custom-fields/api/workspace-token"
 import errorLogWorkspaceTokenAPIs from "@/features/error-logs/api/workspace-token"
+import fbCommentsWorkspaceTokenAPIs from "@/features/fb-comments/api/workspace-token"
 import flowWorkspaceTokenAPIs from "@/features/flows/api/workspace-token"
 import inboxWorkspaceTokenAPIs from "@/features/inboxes/api/workspace-token"
 import whatsappMessageTemplateWorkspaceTokenAPIs from "@/features/integration-whatsapp/message-templates/api/workspace-token"
@@ -30,6 +31,7 @@ export const publicRouter = {
   ...botFieldWorkspaceTokenAPIs,
   ...customFieldWorkspaceTokenAPIs,
   ...errorLogWorkspaceTokenAPIs,
+  ...fbCommentsWorkspaceTokenAPIs,
   ...contactWorkspaceTokenAPIs,
   ...broadcastWorkspaceTokenAPIs,
   ...sequencesWorkspaceTokenAPIs,

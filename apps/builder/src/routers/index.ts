@@ -13,6 +13,7 @@ import { customFieldsAPI } from "@/features/custom-fields/api"
 import { emailTopicsAPI } from "@/features/email-topics/api"
 import { errorLogsAPI } from "@/features/error-logs/api"
 import { fbCommentsAPI } from "@/features/fb-comments/api"
+import fbCommentsWorkspaceTokenAPIs from "@/features/fb-comments/api/workspace-token"
 import { flowsAPI } from "@/features/flows/api"
 import { foldersAPI } from "@/features/folders/api"
 import { inboxesAPI } from "@/features/inboxes/api"
@@ -82,6 +83,7 @@ export const router = {
   messengerMessageTemplateAPIs,
   savedRepliesAPI,
   fbCommentsAPI,
+  ...fbCommentsWorkspaceTokenAPIs,
   sequencesAPI,
   aiFilesAPI,
   inboxesAPI,
