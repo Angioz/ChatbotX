@@ -37,9 +37,11 @@ const transaction = {
 }
 
 vi.mock("@chatbotx.io/database/client", () => ({
+  and: vi.fn((...conditions) => ({ conditions })),
   db: {
     transaction: mockDbTransaction,
   },
+  eq: vi.fn((column, value) => ({ column, value })),
 }))
 
 vi.mock("@chatbotx.io/database/schema", () => ({
@@ -63,6 +65,12 @@ vi.mock("../src/errors", () => ({
 vi.mock("../src/flow-version", () => ({
   flowVersionService: {
     findDraft: mockFindDraft,
+  },
+}))
+
+vi.mock("../src/folder", () => ({
+  folderService: {
+    ensureExists: vi.fn(),
   },
 }))
 
