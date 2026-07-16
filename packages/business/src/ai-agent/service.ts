@@ -189,7 +189,12 @@ class AiAgentService extends BaseService {
             ),
           }),
         })
-        .where(eq(aiAgentModel.id, aiAgent.id))
+        .where(
+          and(
+            eq(aiAgentModel.id, aiAgent.id),
+            eq(aiAgentModel.workspaceId, ctx.workspaceId),
+          ),
+        )
     })
 
     await this.invalidateCacheTags(this.getWorkspaceCacheTag(ctx.workspaceId))

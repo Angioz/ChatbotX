@@ -1,5 +1,11 @@
 import { fbCommentAutomationService } from "@chatbotx.io/business"
 import z from "zod"
+import {
+  possibleErrorsOnCreatingResource,
+  possibleErrorsOnDeletingResource,
+  possibleErrorsOnFindingResource,
+  possibleErrorsOnUpdatingResource,
+} from "@/lib/orpc/orpc-error-helper"
 import { workspaceTokenAuthAPI } from "@/orpc"
 import { createFbCommentRequest } from "../schema/action"
 import {
@@ -20,6 +26,7 @@ export const fbCommentsWorkspaceTokenAPIs = {
     })
     .input(createFbCommentRequest)
     .output(commentAutomationResource)
+    .errors(possibleErrorsOnCreatingResource)
     .handler(
       async ({ context, input }) =>
         await fbCommentAutomationService.create(context.workspace.id, input),
@@ -34,6 +41,7 @@ export const fbCommentsWorkspaceTokenAPIs = {
     })
     .input(listCommentAutomationsInput)
     .output(listCommentAutomationsOutput)
+    .errors(possibleErrorsOnFindingResource)
     .handler(async ({ context, input }) => {
       const { page, perPage, sort, ...filters } = input
       return await fbCommentAutomationService.list({
@@ -54,6 +62,7 @@ export const fbCommentsWorkspaceTokenAPIs = {
     })
     .input(commentAutomationIdInput.and(z.object({ enabled: z.boolean() })))
     .output(commentAutomationResource)
+    .errors(possibleErrorsOnUpdatingResource)
     .handler(
       async ({ context, input }) =>
         await fbCommentAutomationService.setStatus(
@@ -71,6 +80,7 @@ export const fbCommentsWorkspaceTokenAPIs = {
     })
     .input(commentAutomationIdInput)
     .output(z.void())
+    .errors(possibleErrorsOnDeletingResource)
     .handler(async ({ context, input }) => {
       await fbCommentAutomationService.delete({
         workspaceId: context.workspace.id,
