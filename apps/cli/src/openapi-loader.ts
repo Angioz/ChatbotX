@@ -137,11 +137,16 @@ export function pathAndMethodToCommandName(
   const m = method.toLowerCase()
 
   if (segments.length === 1) {
+    // put/patch on the bare collection (no id segment) is a mass-update —
+    // named distinctly from the id-level "update" below so the two don't
+    // collide (e.g. PUT /v1/bot-fields vs PUT /v1/bot-fields/{idOrName}).
+    // "update-all" (not "bulk-update") to avoid colliding with a literal
+    // .../bulk-update action sub-path, which some groups also define.
     const actions: Record<string, string> = {
       get: SINGLETON_RESOURCES.has(group) ? "get" : "list",
       post: "create",
-      put: "update",
-      patch: "update",
+      put: "update-all",
+      patch: "update-all",
       delete: "delete",
     }
     return `${group}:${actions[m] ?? m}`
@@ -193,7 +198,13 @@ export function pathAndMethodToCommandName(
     return `${group}:${singular}:${verb}`
   }
   if (m === "delete") {
-    return `${group}:${singular}:delete`
+    // Mirror the get/list distinction above: deleting one item (last segment
+    // is a param) vs clearing the whole sub-resource collection (it isn't)
+    // must not collapse to the same name (e.g. DELETE .../custom-fields/{id}
+    // vs DELETE .../custom-fields).
+    const sub = isLastRemainderParam ? singular : subResource
+    const verb = isLastRemainderParam ? "delete" : "clear"
+    return `${group}:${sub}:${verb}`
   }
   if (m === "put" || m === "patch") {
     return `${group}:${subResource}:update`
