@@ -8,11 +8,37 @@ Commands are automatically generated from the ChatbotX public API spec — no ma
 
 ## Installation
 
-```bash
-npm install -g chatbotx
-# or
-pnpm install -g chatbotx
+The CLI isn't published to a public npm registry yet. Install it locally from
+the fork repo with `npm link` — this puts a global `chatbotx` binary on PATH
+that always runs the code currently checked out in `apps/cli`.
+
+**Windows PowerShell:**
+
+```powershell
+cd apps\cli
+npm run build
+npm link
 ```
+
+Verify it's on PATH (open a fresh shell if the current one was open before linking):
+
+```powershell
+chatbotx --version
+```
+
+To re-link after pulling new changes, just rebuild — `npm link` only needs to
+run once:
+
+```powershell
+npm run build
+```
+
+If you ever need to remove the global link: `npm unlink -g chatbotx`.
+
+> Once the CLI stabilizes, `pnpm publish` (see the `release` script in
+> `package.json`) can push it to the public npm registry as `chatbotx` — at
+> that point `npm install -g chatbotx` would work from any machine without
+> cloning the repo. Not needed for single-machine use.
 
 ---
 
@@ -61,6 +87,31 @@ Available on every command:
 | `--apiUrl` | Override API URL for this run |
 | `--allowSelfSignedCert` | Disable TLS cert validation |
 | `--refresh-spec` | Force re-fetch the OpenAPI spec (clears cache) |
+
+---
+
+## Quick Start (Windows PowerShell)
+
+Three worked examples once installed (above) and configured (below):
+
+```powershell
+# 1. Confirm the binary is linked and runs
+chatbotx --version
+
+# 2. List existing flows (id + name)
+chatbotx flows list
+
+# 3. Apply a flow definition from a file (creates it, or updates it in-place
+#    if a flow with the same "name" already exists)
+chatbotx flows apply --file .\my-flow.json
+```
+
+`my-flow.json` needs at least a top-level `"name"` field — the easiest way to
+get a valid one is to export an existing flow first:
+
+```powershell
+chatbotx flows export 11608802791325696 --file .\my-flow.json
+```
 
 ---
 
@@ -222,7 +273,13 @@ chatbotx broadcasts audience get <idOrName>          # Get broadcast audience (c
 ### `flows`
 
 ```bash
-chatbotx flows list
+chatbotx flows list                                  # List flows (id + name)
+chatbotx flows export <id> [--file <path>]           # Export a flow to apply-compatible JSON
+                                                     # (stdout by default, or written to --file)
+chatbotx flows apply --file <path>                   # Create or update a flow from a JSON file
+                                                     # (kubectl-style upsert-by-name: PUT if a flow
+                                                     #  with that exact name exists, POST if not —
+                                                     #  re-applying the same file is idempotent)
 ```
 
 ---
