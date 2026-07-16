@@ -8,6 +8,7 @@ import z from "zod"
 export const chatbotResource = createSelectSchema(workspaceModel, {
   createdAt: z.coerce.date(),
   id: zodBigintAsString(),
+  scheduledDeletionAt: z.coerce.date().nullable(),
   updatedAt: z.coerce.date(),
 })
 export type WorkspaceResource = z.infer<typeof chatbotResource>
