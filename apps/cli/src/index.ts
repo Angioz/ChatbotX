@@ -4,6 +4,7 @@ import yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 import packageJson from "../package.json"
 import { setConfig } from "./commands/config"
+import { registerFlowsCustomCommands } from "./commands/flows"
 import type { ConfigOptions } from "./config"
 import { getConfig } from "./config"
 import { executeDynamicCommand } from "./dynamic-executor"
@@ -87,6 +88,14 @@ const registerGroupCommand = (
 ): void => {
   cli.command(groupName, `${groupName} commands`, (groupCli: Argv) => {
     registerActionsOnCli(groupCli, group.actions, config)
+    // "flows apply"/"flows export" are hand-written orchestration commands
+    // (list+conditional PUT/POST, file I/O) — not 1:1 spec mappings, so they
+    // can't fit the generic DynamicTool/ActionEntry shape above. Registered
+    // directly on the same groupCli instance so they sit alongside the
+    // spec-generated flows:* actions instead of a second "flows" command.
+    if (groupName === "flows") {
+      registerFlowsCustomCommands(groupCli, config)
+    }
     for (const [subgroupName, actions] of Object.entries(group.subgroups)) {
       groupCli.command(
         subgroupName,
