@@ -5,7 +5,6 @@ import {
   likeContains,
   parseOrderByAsObject,
 } from "@chatbotx.io/database/utils"
-import { assertCurrentUserCanAccessChatbot } from "@/lib/auth/utils"
 import type {
   ErrorLogHealthRequest,
   ErrorLogHealthResponse,
@@ -16,8 +15,6 @@ import type {
 export async function listErrorLogs(
   input: ListErrorLogsRequest,
 ): Promise<ListErrorLogsResponse> {
-  await assertCurrentUserCanAccessChatbot(input.workspaceId)
-
   const where = {
     workspaceId: input.workspaceId,
     ...(input.keyword
@@ -53,8 +50,6 @@ export async function listErrorLogs(
 export async function getErrorLogHealth(
   input: ErrorLogHealthRequest,
 ): Promise<ErrorLogHealthResponse> {
-  await assertCurrentUserCanAccessChatbot(input.workspaceId)
-
   const since = new Date(Date.now() - input.windowMinutes * 60_000)
   const where = {
     workspaceId: input.workspaceId,
