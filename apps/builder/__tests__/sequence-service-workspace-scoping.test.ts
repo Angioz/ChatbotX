@@ -3,7 +3,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest"
 
 const mocks = vi.hoisted(() => ({
+  sequenceDelete: vi.fn(),
   sequenceFindFirst: vi.fn(),
+  sequenceUpdate: vi.fn(),
 }))
 
 vi.mock("@chatbotx.io/database/client", async (importOriginal) => {
@@ -13,10 +15,12 @@ vi.mock("@chatbotx.io/database/client", async (importOriginal) => {
     ...actual,
     db: {
       ...actual.db,
+      delete: mocks.sequenceDelete,
       query: {
         ...actual.db.query,
         sequenceModel: { findFirst: mocks.sequenceFindFirst },
       },
+      update: mocks.sequenceUpdate,
     },
   }
 })
@@ -25,7 +29,9 @@ const { sequenceService } = await import("@chatbotx.io/business")
 
 describe("sequenceService workspace scoping (real service, mocked db)", () => {
   beforeEach(() => {
+    mocks.sequenceDelete.mockReset()
     mocks.sequenceFindFirst.mockReset()
+    mocks.sequenceUpdate.mockReset()
   })
 
   test("findOrFail throws NOT_FOUND for a cross-workspace id instead of silently succeeding", async () => {
@@ -57,4 +63,42 @@ describe("sequenceService workspace scoping (real service, mocked db)", () => {
 
     expect(result).toBeUndefined()
   })
+
+  test(
+    "updateSequence rejects a cross-workspace id before issuing a mutation",
+    async () => {
+      mocks.sequenceFindFirst.mockResolvedValue(undefined)
+
+      await expect(
+        sequenceService.updateSequence(
+          { workspaceId: "own-workspace", id: "foreign-sequence" },
+          { name: "Hijacked" },
+        ),
+      ).rejects.toMatchObject({ code: "notFound", httpStatusCode: 404 })
+
+      expect(mocks.sequenceFindFirst).toHaveBeenCalledWith({
+        where: { id: "foreign-sequence", workspaceId: "own-workspace" },
+      })
+      expect(mocks.sequenceUpdate).not.toHaveBeenCalled()
+    },
+  )
+
+  test(
+    "deleteSequence rejects a cross-workspace id before issuing a mutation",
+    async () => {
+      mocks.sequenceFindFirst.mockResolvedValue(undefined)
+
+      await expect(
+        sequenceService.deleteSequence({
+          workspaceId: "own-workspace",
+          id: "foreign-sequence",
+        }),
+      ).rejects.toMatchObject({ code: "notFound", httpStatusCode: 404 })
+
+      expect(mocks.sequenceFindFirst).toHaveBeenCalledWith({
+        where: { id: "foreign-sequence", workspaceId: "own-workspace" },
+      })
+      expect(mocks.sequenceDelete).not.toHaveBeenCalled()
+    },
+  )
 })
