@@ -1,5 +1,6 @@
 "use server"
 
+import { assertWebhookUrlIsSafe } from "@chatbotx.io/business"
 import { and, db, eq, inArray } from "@chatbotx.io/database/client"
 import { conditionModel, webhookModel } from "@chatbotx.io/database/schema"
 import { updateWebhookCache } from "@chatbotx.io/events"
@@ -16,6 +17,10 @@ export const updateWebhookAction = workspaceActionClient
       parsedInput,
     } = props
     const { conditions, url } = parsedInput
+
+    if (url) {
+      await assertWebhookUrlIsSafe(url)
+    }
 
     const result = await db.transaction(async (tx) => {
       const existingConditions = await tx.query.conditionModel.findMany({
