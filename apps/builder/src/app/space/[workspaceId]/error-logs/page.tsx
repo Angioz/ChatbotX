@@ -7,6 +7,7 @@ import { AppTab } from "@/components/app-tab"
 import { ErrorLogsTable } from "@/features/error-logs/error-logs-table"
 import { listErrorLogs } from "@/features/error-logs/queries"
 import { listErrorLogsSearchParamsCache } from "@/features/error-logs/schemas/query"
+import { assertCurrentUserCanAccessChatbot } from "@/lib/auth/utils"
 
 export default async function ErrorLogsPage(props: {
   params: Promise<{ workspaceId: string }>
@@ -18,6 +19,7 @@ export default async function ErrorLogsPage(props: {
   if (!workspaceId) {
     return notFound()
   }
+  await assertCurrentUserCanAccessChatbot(workspaceId)
 
   const searchParams = await props.searchParams
   const search = listErrorLogsSearchParamsCache.parse(searchParams)

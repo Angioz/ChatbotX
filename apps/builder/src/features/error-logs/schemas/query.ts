@@ -45,3 +45,17 @@ export const publicListErrorLogsResponse = z.object({
 export type PublicListErrorLogsResponse = z.infer<
   typeof publicListErrorLogsResponse
 >
+
+export const errorLogHealthRequest = z.object({
+  windowMinutes: z.coerce.number().int().min(1).max(1440).default(60),
+  workspaceId: z.string(),
+})
+export type ErrorLogHealthRequest = z.infer<typeof errorLogHealthRequest>
+
+export const errorLogHealthResponse = z.object({
+  windowMinutes: z.number(),
+  errorCount: z.number(),
+  lastErrorAt: z.coerce.date().nullable(),
+  healthy: z.boolean(),
+})
+export type ErrorLogHealthResponse = z.infer<typeof errorLogHealthResponse>

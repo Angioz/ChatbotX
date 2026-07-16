@@ -1,6 +1,8 @@
 import { workspaceTokenAuthAPI } from "@/orpc"
-import { listErrorLogs } from "../queries"
+import { getErrorLogHealth, listErrorLogs } from "../queries"
 import {
+  errorLogHealthRequest,
+  errorLogHealthResponse,
   listErrorLogsRequest,
   publicListErrorLogsResponse,
 } from "../schemas/query"
@@ -18,6 +20,22 @@ export const errorLogsWorkspaceTokenAPIs = {
     .handler(
       async ({ context, input }) =>
         await listErrorLogs({
+          ...input,
+          workspaceId: context.workspace.id,
+        }),
+    ),
+  getErrorLogHealthWorkspaceTokenAPI: workspaceTokenAuthAPI
+    .route({
+      method: "GET",
+      path: "/v1/error-logs/health",
+      summary: "Workspace automation health (error-log derived)",
+      tags: ["Error Logs"],
+    })
+    .input(errorLogHealthRequest.omit({ workspaceId: true }))
+    .output(errorLogHealthResponse)
+    .handler(
+      async ({ context, input }) =>
+        await getErrorLogHealth({
           ...input,
           workspaceId: context.workspace.id,
         }),
