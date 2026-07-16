@@ -1,4 +1,5 @@
 import {
+  and,
   type DatabaseClient,
   db,
   eq,
@@ -166,7 +167,12 @@ class TriggerService extends BaseService {
       await client
         .update(triggerModel)
         .set({ actions })
-        .where(eq(triggerModel.id, id))
+        .where(
+          and(
+            eq(triggerModel.id, id),
+            eq(triggerModel.workspaceId, workspaceId),
+          ),
+        )
 
       if (conditionsToDelete.length > 0) {
         await client.delete(conditionModel).where(
@@ -226,7 +232,12 @@ class TriggerService extends BaseService {
     await this.findOrFail(input, client)
 
     // Condition rows cascade-delete via the Condition_triggerId FK (onDelete: cascade).
-    await client.delete(triggerModel).where(eq(triggerModel.id, input.id))
+    await client.delete(triggerModel).where(
+      and(
+        eq(triggerModel.id, input.id),
+        eq(triggerModel.workspaceId, input.workspaceId),
+      ),
+    )
 
     await removeTriggerCache(input.workspaceId)
   }
