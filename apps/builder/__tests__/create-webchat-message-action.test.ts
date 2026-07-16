@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 const {
   insertBuilder,
   mockAutomatedResponseEnqueue,
+  mockAutomatedResponseEnqueueFlowAction,
   mockChatQueueAdd,
   mockContactFindById,
   mockContactUnblockIfBlocked,
@@ -47,6 +48,9 @@ const {
   return {
     insertBuilder,
     mockAutomatedResponseEnqueue: vi.fn().mockResolvedValue(undefined),
+    mockAutomatedResponseEnqueueFlowAction: vi
+      .fn()
+      .mockResolvedValue(undefined),
     mockContactFindById: vi.fn(),
     mockContactUnblockIfBlocked: vi.fn().mockResolvedValue(null),
     mockContactInboxFindLatest: vi.fn(),
@@ -91,7 +95,10 @@ vi.mock("@/lib/safe-action", () => ({
 }))
 
 vi.mock("@chatbotx.io/automated-response", () => ({
-  automatedResponseService: { enqueue: mockAutomatedResponseEnqueue },
+  automatedResponseService: {
+    enqueue: mockAutomatedResponseEnqueue,
+    enqueueFlowAction: mockAutomatedResponseEnqueueFlowAction,
+  },
 }))
 
 vi.mock("@chatbotx.io/business", () => ({
@@ -348,6 +355,28 @@ describe("handleCreateWebchatMessage", () => {
       messageText: "hello",
       workspaceId: "ws-1",
     })
+  })
+
+  test("enqueues webchat postbacks through flow action debounce", async () => {
+    await handleCreateWebchatMessage({
+      parsedInput: {
+        text: "clicked",
+        postback: "button-a",
+        workspaceId: "ws-1",
+        webchatId: "webchat-1",
+        guestConversationId: "guest-1",
+      },
+    })
+
+    expect(mockAutomatedResponseEnqueueFlowAction).toHaveBeenCalledWith({
+      kind: "postback",
+      data: {
+        conversationId: conversation,
+        contactInboxId: contactInbox,
+        action: "button-a",
+      },
+    })
+    expect(mockAutomatedResponseEnqueue).not.toHaveBeenCalled()
   })
 })
 
