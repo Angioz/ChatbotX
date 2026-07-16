@@ -12,6 +12,7 @@ import { createId } from "@chatbotx.io/utils"
 import { BaseService } from "../base.service"
 import { ChatbotXException, notFoundException } from "../errors"
 import { folderService } from "../folder"
+import { assertWebhookUrlIsSafe } from "./ssrf"
 
 export type CreateWebhookInput = Pick<WebhookModel, "folderId" | "name">
 
@@ -103,6 +104,10 @@ class WebhookService extends BaseService {
     data: UpdateWebhookInput,
     tx?: DatabaseClient,
   ): Promise<WebhookModel> {
+    if (data.url) {
+      await assertWebhookUrlIsSafe(data.url)
+    }
+
     const execute = async (client: DatabaseClient) => {
       await this.findOrFail(input, client)
 
