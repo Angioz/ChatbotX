@@ -19,3 +19,13 @@ dist
 .git
 .github
 reports
+
+# Defense-in-depth: never let a local build scoop up secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+**/.env
+**/.env.*
+*.pem
+*.key
