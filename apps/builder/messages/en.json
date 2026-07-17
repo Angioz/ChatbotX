@@ -1307,6 +1307,10 @@
     "rememberConversation": {
       "label": "Remember conversation"
     },
+    "igFollowCheckRecheck": {
+      "description": "Ignore the cached follow status and query Instagram again.",
+      "label": "Force recheck"
+    },
     "temperature": {
       "label": "Temperature"
     },
@@ -1927,7 +1931,11 @@
       "formatDate": "Format Date",
       "generateCode": "Generate Code",
       "getDataFromJson": "Get Data From JSON",
+      "igFollowCheck": "Instagram Follow Check",
+      "igFollowCheckFollows": "Follows",
+      "igFollowCheckNotFollows": "Doesn't follow",
       "inboxActions": "Inbox Actions",
+      "instagramActions": "Instagram Actions",
       "markEmailVerified": "Mark Email Verified",
       "activeCampaignSyncContact": "Add Contact to ActiveCampaign",
       "facebookCustomAudience": "Facebook Custom Audience",
