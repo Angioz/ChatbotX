@@ -35,6 +35,7 @@ import {
   StarIcon,
   StarOffIcon,
   TagIcon,
+  UserCheckIcon,
   UserIcon,
   UserRoundXIcon,
   ZapIcon,
@@ -395,6 +396,18 @@ export const performActionMenus = (t: TranslationFn): MenuItem[] => [
         label: t("flows.actions.deleteContact"),
         icon: UserRoundXIcon,
         stepType: stepTypes.enum.deleteContact,
+      },
+    ],
+  },
+  {
+    label: t("flows.actions.instagramActions"),
+    icon: UserCheckIcon,
+    stepType: null,
+    children: [
+      {
+        label: t("flows.actions.igFollowCheck"),
+        icon: UserCheckIcon,
+        stepType: stepTypes.enum.igFollowCheck,
       },
     ],
   },

@@ -29,6 +29,7 @@ import { formatDateStepSchema } from "./steps/format-date"
 import { generateCodeStepSchema } from "./steps/generate-code"
 import { getDataFromJsonStepSchema } from "./steps/get-data-from-json"
 import { getResponseAddContactSchema } from "./steps/get-response-add-contact"
+import { igFollowCheckStepSchema } from "./steps/ig-follow-check"
 import { klaviyoSyncProfileSchema } from "./steps/klaviyo-sync-profile"
 import { mailchimpAddMemberSchema } from "./steps/mailchimp-add-member"
 import { mailerLiteAddSubscriberSchema } from "./steps/mailer-lite-add-subscriber"
@@ -78,6 +79,8 @@ const contactSteps = [
   clearCustomFieldStepSchema,
   deleteContactStepSchema,
 ]
+
+const instagramSteps = [igFollowCheckStepSchema]
 
 const broadcastSteps = [
   subscribeBroadcastStepSchema,
@@ -148,6 +151,7 @@ const googleSheetStep = [
 export const actionSteps = [
   ...inboxSteps,
   ...contactSteps,
+  ...instagramSteps,
   ...broadcastSteps,
   ...sequenceSteps,
   ...toolSteps,

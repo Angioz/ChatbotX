@@ -1296,6 +1296,10 @@
     "rememberConversation": {
       "label": "Ghi nhớ cuộc trò chuyện"
     },
+    "igFollowCheckRecheck": {
+      "description": "Bỏ qua trạng thái theo dõi đã lưu trong bộ nhớ đệm và kiểm tra lại trên Instagram.",
+      "label": "Buộc kiểm tra lại"
+    },
     "temperature": {
       "label": "Nhiệt độ"
     },
@@ -1942,7 +1946,11 @@
       "formatDate": "Định dạng ngày",
       "generateCode": "Tạo mã",
       "getDataFromJson": "Lấy dữ liệu từ JSON",
+      "igFollowCheck": "Kiểm tra theo dõi Instagram",
+      "igFollowCheckFollows": "Đang theo dõi",
+      "igFollowCheckNotFollows": "Chưa theo dõi",
       "inboxActions": "Hành động hộp thư",
+      "instagramActions": "Hành động Instagram",
       "markEmailVerified": "Đánh dấu email đã xác minh",
       "activeCampaignSyncContact": "Thêm liên hệ vào ActiveCampaign",
       "facebookCustomAudience": "Facebook Custom Audience",

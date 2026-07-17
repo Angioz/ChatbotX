@@ -36,6 +36,9 @@ export const stepTypes = z.enum([
   "cancelContactInput",
   "filterContact",
 
+  // Instagram Operations (IG_)
+  "igFollowCheck",
+
   // Inbox Operations (I_)
   "disableBot",
   "enableBot",

@@ -56,6 +56,7 @@ import { handleAIGenerateText } from "./generate-text"
 import { handleAIGenerateTextAgent } from "./generate-text-agent"
 import { addGetResponseContact } from "./get-response-handler"
 import { getUserData } from "./get-user-data"
+import { stepIgFollowCheck } from "./ig-follow-check"
 import { syncKlaviyoProfile } from "./klaviyo-handler"
 import { addMailchimpMember } from "./mailchimp-handler"
 import { addMailerLiteSubscriber } from "./mailer-lite-handler"
@@ -388,6 +389,7 @@ export const flowStepHandlers: Record<
   [stepTypes.enum.enableBot]: stepEnableBot,
   [stepTypes.enum.followConversation]: stepFollowConversation,
   [stepTypes.enum.formatDate]: formatDate,
+  [stepTypes.enum.igFollowCheck]: stepIgFollowCheck,
   [stepTypes.enum.generateCode]: generateCode,
   [stepTypes.enum.getDataFromJson]: getDataFromJSON,
   [stepTypes.enum.landingPage]: undefined,

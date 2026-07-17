@@ -36,6 +36,7 @@ import { generateCodeStep } from "./generate-code"
 import { getDataFromJsonStep } from "./get-data-from-json"
 import { getResponseAddContactStep } from "./get-response-add-contact"
 import { getUserDataStep } from "./get-user-data"
+import { igFollowCheckStep } from "./ig-follow-check"
 import { klaviyoSyncProfileStep } from "./klaviyo-sync-profile"
 import { mailchimpAddMemberStep } from "./mailchimp-add-member"
 import { mailerLiteAddSubscriberStep } from "./mailer-lite-add-subscriber"
@@ -144,6 +145,7 @@ export const allSteps: Record<StepType, StepDefinition<any> | undefined> = {
   [stepTypes.enum.unsubscribeSequence]: unsubscribeSequenceStep,
   [stepTypes.enum.chooseChannel]: chooseChannelStep,
   [stepTypes.enum.filterContact]: undefined,
+  [stepTypes.enum.igFollowCheck]: igFollowCheckStep,
   [stepTypes.enum.addNotes]: addNotesStep,
   [stepTypes.enum.waitUserReply]: undefined,
   [stepTypes.enum.aiGenerateText]: aiGenerateTextStep,
