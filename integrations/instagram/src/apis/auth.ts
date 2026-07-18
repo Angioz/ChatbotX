@@ -33,6 +33,7 @@ export function generateAuthUrl({
     redirect_uri: redirectUrl,
     response_type: "code",
     state: Buffer.from(JSON.stringify(stateParams ?? {})).toString("base64"),
+    force_reauth: "true",
     scope: INSTAGRAM_BUSINESS_SCOPES.join(","),
   })
   return `${INSTAGRAM_OAUTH_AUTHORIZE_URL}?${params.toString()}`
