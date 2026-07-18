@@ -78,9 +78,12 @@ class FlowService extends BaseService {
     tx?: DatabaseClient,
   ): Promise<
     FlowModel & {
-      nodes: unknown[] | null
-      edges: unknown[] | null
-      draft: { nodes: unknown[]; edges: unknown[] } | null
+      nodes: Record<string, unknown>[] | null
+      edges: Record<string, unknown>[] | null
+      draft: {
+        nodes: Record<string, unknown>[]
+        edges: Record<string, unknown>[]
+      } | null
     }
   > {
     const client = tx ?? db
@@ -91,8 +94,8 @@ class FlowService extends BaseService {
       throw notFoundException("Flow not found")
     }
 
-    let nodes: unknown[] | null = null
-    let edges: unknown[] | null = null
+    let nodes: Record<string, unknown>[] | null = null
+    let edges: Record<string, unknown>[] | null = null
     if (flow.currentVersionId) {
       const published = await client.query.flowVersionModel.findFirst({
         where: {
@@ -100,8 +103,10 @@ class FlowService extends BaseService {
           workspaceId: input.workspaceId,
         },
       })
-      nodes = (published?.nodes as unknown[] | undefined) ?? null
-      edges = (published?.edges as unknown[] | undefined) ?? null
+      nodes =
+        (published?.nodes as Record<string, unknown>[] | undefined) ?? null
+      edges =
+        (published?.edges as Record<string, unknown>[] | undefined) ?? null
     }
 
     const draftVersion = await flowVersionService.findDraft(
@@ -110,8 +115,8 @@ class FlowService extends BaseService {
     )
     const draft = draftVersion
       ? {
-          nodes: draftVersion.nodes as unknown[],
-          edges: draftVersion.edges as unknown[],
+          nodes: draftVersion.nodes as Record<string, unknown>[],
+          edges: draftVersion.edges as Record<string, unknown>[],
         }
       : null
 
