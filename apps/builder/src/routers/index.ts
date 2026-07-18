@@ -17,6 +17,7 @@ import fbCommentsWorkspaceTokenAPIs from "@/features/fb-comments/api/workspace-t
 import { flowsAPI } from "@/features/flows/api"
 import { foldersAPI } from "@/features/folders/api"
 import { inboxesAPI } from "@/features/inboxes/api"
+import instagramMediaWorkspaceTokenAPIs from "@/features/instagram-media/api/workspace-token"
 import { integrationActiveCampaignAPI } from "@/features/integration-active-campaign/api"
 import { integrationDripAPI } from "@/features/integration-drip/api"
 import { integrationFacebookAdsAPI } from "@/features/integration-facebook-ads/api"
@@ -84,6 +85,7 @@ export const router = {
   savedRepliesAPI,
   fbCommentsAPI,
   ...fbCommentsWorkspaceTokenAPIs,
+  ...instagramMediaWorkspaceTokenAPIs,
   sequencesAPI,
   aiFilesAPI,
   inboxesAPI,
