@@ -9,6 +9,7 @@ import type { MessengerAuthValue } from "@chatbotx.io/integration-messenger/sche
 import { zodBigintAsString } from "@chatbotx.io/utils"
 import z from "zod"
 import { withWorkspaceIdSchema } from "@/features/workspaces/schema/resource"
+import { listInstagramMediaForWorkspace } from "@/features/instagram-media/service"
 import { workspaceAuthorizedMidddleware } from "@/middlewares/auth"
 import { authorizedAPI } from "@/orpc"
 import { createFbComment } from "../actions/create-fb-comment.action"
@@ -143,6 +144,40 @@ export const fbCommentsPrivateAPI = {
         )
         .flatMap((r) => r.value)
 
+      return { posts }
+    }),
+
+  instagramPostsAPI: authorizedAPI
+    .route({
+      method: "GET",
+      path: "/workspaces/{workspaceId}/fb-comments/instagram-posts",
+      summary: "List Instagram media for IG-direct Comment Automation",
+      tags: ["FB Comments"],
+    })
+    .input(withWorkspaceIdSchema)
+    .use(workspaceAuthorizedMidddleware, (input) => input.workspaceId)
+    .output(
+      z.object({
+        posts: z.array(
+          z.object({
+            id: z.string(),
+            message: z.string().optional(),
+            full_picture: z.string().optional(),
+            created_time: z.string(),
+            permalink_url: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .handler(async ({ input }) => {
+      const media = await listInstagramMediaForWorkspace(input.workspaceId)
+      const posts = media.map((item) => ({
+        id: item.id,
+        message: item.caption,
+        full_picture: item.thumbnail_url ?? item.media_url,
+        created_time: item.timestamp,
+        permalink_url: item.permalink,
+      }))
       return { posts }
     }),
 }

@@ -40,6 +40,34 @@ const fetchPosts = async (
   return posts
 }
 
+/**
+ * Instagram-direct workspaces have no Facebook Page, so `facebookPostsAPI`
+ * returns nothing for them. Their media comes from the IG user node instead.
+ * Returns `[]` for messenger workspaces, so merging is safe either way.
+ */
+const fetchInstagramPosts = async (
+  workspaceId: string,
+): Promise<FacebookPost[]> => {
+  const { posts } = await client.fbCommentsAPI.instagramPostsAPI({
+    workspaceId,
+  })
+  return posts
+}
+
+const mergePosts = (
+  ...lists: FacebookPost[][]
+): FacebookPost[] => {
+  const byId = new Map<string, FacebookPost>()
+  for (const list of lists) {
+    for (const post of list) {
+      if (!byId.has(post.id)) {
+        byId.set(post.id, post)
+      }
+    }
+  }
+  return [...byId.values()]
+}
+
 export const createFbCommentPostsStore = (
   props: Partial<FbCommentPostsState>,
 ) =>
@@ -63,12 +91,20 @@ export const createFbCommentPostsStore = (
       set({ loading: true, error: null })
       try {
         const { workspaceId } = get()
-        const [publishedPosts, adsPosts, reelsPosts] = await Promise.all([
-          fetchPosts(workspaceId, "published"),
-          fetchPosts(workspaceId, "ads"),
-          fetchPosts(workspaceId, "reels"),
-        ])
-        set({ publishedPosts, adsPosts, reelsPosts })
+        const [publishedPosts, adsPosts, reelsPosts, instagramPosts] =
+          await Promise.all([
+            fetchPosts(workspaceId, "published"),
+            fetchPosts(workspaceId, "ads"),
+            fetchPosts(workspaceId, "reels"),
+            fetchInstagramPosts(workspaceId),
+          ])
+        // IG-direct media surfaces under the default (published) tab; the
+        // Facebook-specific tabs stay empty for IG-only workspaces.
+        set({
+          publishedPosts: mergePosts(publishedPosts, instagramPosts),
+          adsPosts,
+          reelsPosts,
+        })
       } catch (error: unknown) {
         set({
           error:
@@ -85,8 +121,13 @@ export const createFbCommentPostsStore = (
       const { workspaceId } = get()
       set({ loading: true, error: null })
       try {
-        const publishedPosts = await fetchPosts(workspaceId, "published")
-        set({ publishedPosts })
+        // Keep parity with initialize(): IG-direct media lives under the
+        // published tab, so a tab refresh must re-merge it too.
+        const [publishedPosts, instagramPosts] = await Promise.all([
+          fetchPosts(workspaceId, "published"),
+          fetchInstagramPosts(workspaceId),
+        ])
+        set({ publishedPosts: mergePosts(publishedPosts, instagramPosts) })
       } catch (error: unknown) {
         set({
           error:
