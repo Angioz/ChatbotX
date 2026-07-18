@@ -5,6 +5,12 @@ export function findInstagramIntegrationByInboxId(inboxId: string) {
   return findOrFail({ table: integrationInstagramModel, where: { inboxId } })
 }
 
+export function findInstagramIntegrationsByWorkspaceId(workspaceId: string) {
+  return db.query.integrationInstagramModel.findMany({
+    where: { workspaceId },
+  })
+}
+
 /**
  * Whether an Instagram integration still exists for a Facebook page, optionally
  * scoped to a specific Meta app (`clientId`). Cross-workspace by design: a page
