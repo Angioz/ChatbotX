@@ -16,6 +16,7 @@ const { flowServiceMocks, listFlowsMock, procedures } = vi.hoisted(() => ({
     cloneFlow: vi.fn(),
     createFlow: vi.fn(),
     getFlow: vi.fn(),
+    getFlowWithGraph: vi.fn(),
     publishFlow: vi.fn(),
     updateFlow: vi.fn(),
   },
@@ -92,7 +93,7 @@ describe("flow workspace-token API", () => {
 
   test("get scopes the lookup to the token workspace", async () => {
     const flow = { id: "flow-1" }
-    flowServiceMocks.getFlow.mockResolvedValue(flow)
+    flowServiceMocks.getFlowWithGraph.mockResolvedValue(flow)
 
     await expect(
       getHandler(
@@ -104,7 +105,7 @@ describe("flow workspace-token API", () => {
       }),
     ).resolves.toBe(flow)
 
-    expect(flowServiceMocks.getFlow).toHaveBeenCalledWith({
+    expect(flowServiceMocks.getFlowWithGraph).toHaveBeenCalledWith({
       workspaceId: "workspace-a",
       id: "flow-1",
     })
@@ -113,7 +114,9 @@ describe("flow workspace-token API", () => {
   test(
     "get rejects a flow id that does not resolve in the token workspace",
     async () => {
-      flowServiceMocks.getFlow.mockRejectedValue(new Error("Flow not found"))
+      flowServiceMocks.getFlowWithGraph.mockRejectedValue(
+        new Error("Flow not found"),
+      )
 
       await expect(
         getHandler(
@@ -125,7 +128,7 @@ describe("flow workspace-token API", () => {
         }),
       ).rejects.toThrow("Flow not found")
 
-      expect(flowServiceMocks.getFlow).toHaveBeenCalledWith({
+      expect(flowServiceMocks.getFlowWithGraph).toHaveBeenCalledWith({
         workspaceId: "workspace-a",
         id: "cross-workspace-flow",
       })
