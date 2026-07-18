@@ -8,6 +8,41 @@ function buildQueryString(params: Record<string, string>): string {
 
 const NO_BODY_METHODS = new Set(["GET", "HEAD", "DELETE"])
 
+const JSON_LIKE = /^\s*[[{]/
+
+/**
+ * Whether a CLI flag value should be JSON.parse-d before being sent in the body.
+ * True for schemas whose OpenAPI type is object/array, and also for composed
+ * schemas (union/intersection/ref) that emit `anyOf`/`oneOf`/`allOf`/`$ref` with
+ * no top-level `type` — e.g. a discriminated union like the fb-comment reply.
+ * For the composed case we only parse when the value actually looks like JSON so
+ * plain string flags are never mangled.
+ */
+function shouldParseAsJson(
+  propSchema:
+    | {
+        type?: string
+        anyOf?: unknown
+        oneOf?: unknown
+        allOf?: unknown
+        $ref?: unknown
+      }
+    | undefined,
+  value: string,
+): boolean {
+  if (propSchema?.type === "array" || propSchema?.type === "object") {
+    return true
+  }
+  const isComposed =
+    propSchema != null &&
+    (propSchema.anyOf !== undefined ||
+      propSchema.oneOf !== undefined ||
+      propSchema.allOf !== undefined ||
+      propSchema.$ref !== undefined ||
+      propSchema.type === undefined)
+  return isComposed && JSON_LIKE.test(value)
+}
+
 export async function executeDynamicCommand(
   tool: DynamicTool,
   params: Record<string, string>,
@@ -36,9 +71,15 @@ export async function executeDynamicCommand(
     const value = params[key]
     if (value !== undefined) {
       const propSchema = tool.inputSchema.properties[key] as
-        | { type?: string }
+        | {
+            type?: string
+            anyOf?: unknown
+            oneOf?: unknown
+            allOf?: unknown
+            $ref?: unknown
+          }
         | undefined
-      if (propSchema?.type === "array" || propSchema?.type === "object") {
+      if (shouldParseAsJson(propSchema, value)) {
         try {
           body[key] = JSON.parse(value)
         } catch {
