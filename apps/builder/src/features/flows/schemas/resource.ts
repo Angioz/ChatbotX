@@ -19,3 +19,19 @@ export const flowWithVersionsResource = flowResource.and(
   }),
 )
 export type FlowWithVersionsResource = z.infer<typeof flowWithVersionsResource>
+
+// Additive: exposes the flow graph (nodes/edges) so `GET /v1/flows/{id}`
+// round-trips with `POST /v1/flows/{id}/publish`, which already accepts
+// nodes+edges. Draft graph (if present) is included separately.
+export const flowGraphResource = z.object({
+  nodes: z.array(z.record(z.string(), z.unknown())),
+  edges: z.array(z.record(z.string(), z.unknown())),
+})
+export type FlowGraphResource = z.infer<typeof flowGraphResource>
+
+export const flowResourceWithGraph = flowResource.extend({
+  nodes: z.array(z.record(z.string(), z.unknown())).nullable(),
+  edges: z.array(z.record(z.string(), z.unknown())).nullable(),
+  draft: flowGraphResource.nullable(),
+})
+export type FlowResourceWithGraph = z.infer<typeof flowResourceWithGraph>

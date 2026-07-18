@@ -38,7 +38,7 @@ export type CreateFbCommentAutomationInput = Pick<
   | "privateReply"
   | "publicReply"
   | "replyAfter"
-> & { folderId?: string | null }
+> & { folderId?: string | null; type?: FBCommentAutomationModel["type"] }
 
 export type ListFbCommentAutomationsInput = {
   workspaceId: string

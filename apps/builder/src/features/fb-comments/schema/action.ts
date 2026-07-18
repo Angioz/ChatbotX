@@ -1,4 +1,5 @@
 import {
+  fbCommentAutomationTypes,
   fbCommentHideCommentsSchema,
   fbCommentIncludeKeywordsSchema,
   fbCommentOptionsSchema,
@@ -50,6 +51,8 @@ export type ListFbCommentsResponse = z.infer<typeof listFbCommentsResponse>
 export const createFbCommentRequest = z.object({
   name: z.string().trim().min(1).max(255),
   folderId: zodBigintAsString().nullish(),
+  // Optional to preserve backward compat: DB defaults to "messenger" when omitted.
+  type: fbCommentAutomationTypes.optional(),
   post: fbCommentPostSchema,
   privateReply: fbCommentReplySchema,
   publicReply: fbCommentReplySchema,

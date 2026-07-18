@@ -12,7 +12,8 @@ import { zodBigintAsString } from "@chatbotx.io/utils"
 import { z } from "zod"
 
 export const createFlowSchema = z.object({
-  folderId: zodBigintAsString().nullable(),
+  // Optional + nullable: omitted or null folderId creates a root-level flow.
+  folderId: zodBigintAsString().nullable().optional(),
   name: z.string().trim().min(1).max(255),
 })
 export type CreateFlowSchema = z.infer<typeof createFlowSchema>

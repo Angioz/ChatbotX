@@ -910,6 +910,9 @@
     "flow": {
       "label": "Luồng"
     },
+    "fbComment": {
+      "label": "Tự động hóa bình luận"
+    },
     "flowId": {
       "label": "ID Luồng"
     },

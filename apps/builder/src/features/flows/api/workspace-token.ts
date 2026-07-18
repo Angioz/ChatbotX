@@ -8,7 +8,7 @@ import {
   publishFlowSchema,
   updateFlowSchema,
 } from "../schemas/action"
-import { flowResource } from "../schemas/resource"
+import { flowResource, flowResourceWithGraph } from "../schemas/resource"
 
 const flowIdInput = z.object({ id: zodBigintAsString() })
 
@@ -58,10 +58,10 @@ const flowWorkspaceTokenAPIs = {
       tags: ["Flows"],
     })
     .input(flowIdInput)
-    .output(flowResource)
+    .output(flowResourceWithGraph)
     .handler(
       async ({ context, input }) =>
-        await flowService.getFlow({
+        await flowService.getFlowWithGraph({
           workspaceId: context.workspace.id,
           id: input.id,
         }),

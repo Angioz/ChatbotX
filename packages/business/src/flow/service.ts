@@ -12,7 +12,7 @@ import { flowVersionService } from "../flow-version"
 import { folderService } from "../folder"
 
 export type CreateFlowInput = {
-  folderId: string | null
+  folderId?: string | null
   name: string
 }
 
@@ -73,6 +73,51 @@ class FlowService extends BaseService {
     return flow
   }
 
+  async getFlowWithGraph(
+    input: { workspaceId: string; id: string },
+    tx?: DatabaseClient,
+  ): Promise<
+    FlowModel & {
+      nodes: unknown[] | null
+      edges: unknown[] | null
+      draft: { nodes: unknown[]; edges: unknown[] } | null
+    }
+  > {
+    const client = tx ?? db
+    const flow = await client.query.flowModel.findFirst({
+      where: { id: input.id, workspaceId: input.workspaceId },
+    })
+    if (!flow) {
+      throw notFoundException("Flow not found")
+    }
+
+    let nodes: unknown[] | null = null
+    let edges: unknown[] | null = null
+    if (flow.currentVersionId) {
+      const published = await client.query.flowVersionModel.findFirst({
+        where: {
+          id: flow.currentVersionId,
+          workspaceId: input.workspaceId,
+        },
+      })
+      nodes = (published?.nodes as unknown[] | undefined) ?? null
+      edges = (published?.edges as unknown[] | undefined) ?? null
+    }
+
+    const draftVersion = await flowVersionService.findDraft(
+      { flowId: flow.id, workspaceId: input.workspaceId },
+      client,
+    )
+    const draft = draftVersion
+      ? {
+          nodes: draftVersion.nodes as unknown[],
+          edges: draftVersion.edges as unknown[],
+        }
+      : null
+
+    return { ...flow, nodes, edges, draft }
+  }
+
   async createFlow(
     workspaceId: string,
     input: CreateFlowInput,
@@ -88,11 +133,12 @@ class FlowService extends BaseService {
     }
 
     const defaultNode = createDefaultSendMessageNode()
+    const folderId = input.folderId ?? null
     const execute = async (client: DatabaseClient) => {
       const flowId = createId()
       const [flow] = await client
         .insert(flowModel)
-        .values({ ...input, id: flowId, workspaceId })
+        .values({ ...input, folderId, id: flowId, workspaceId })
         .returning()
 
       await client.insert(flowAnalyticsSessionModel).values({

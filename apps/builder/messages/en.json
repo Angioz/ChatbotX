@@ -903,6 +903,9 @@
     "flow": {
       "label": "Flow"
     },
+    "fbComment": {
+      "label": "Comment Automation"
+    },
     "flowId": {
       "label": "Flow ID"
     },
