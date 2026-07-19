@@ -138,9 +138,9 @@ const getMessageEntity = async (
   let buttonTitle: string | null = null
 
   const contactSourceId =
-    messaging.sender.id === ctx.auth.metadata.igId
-      ? messaging.recipient.id
-      : messaging.sender.id
+    messaging.sender!.id === ctx.auth.metadata.igId
+      ? messaging.recipient!.id
+      : messaging.sender!.id
   const contact: IncomingContact = {
     sourceId: contactSourceId,
   }
@@ -150,7 +150,7 @@ const getMessageEntity = async (
     message = {
       sourceId: messaging.message.mid,
       messageType:
-        messaging.sender.id === ctx.auth.metadata.igId
+        messaging.sender!.id === ctx.auth.metadata.igId
           ? messageTypes.enum.outgoing
           : messageTypes.enum.incoming,
       text: messaging.message.text,
