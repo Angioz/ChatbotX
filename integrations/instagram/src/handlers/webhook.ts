@@ -122,7 +122,7 @@ const handleWebhookEvent = async (
         data: {
           integrationType: "instagram",
           integrationIdentifier: entry.id,
-          sourceConversationId: messaging[0].sender.id,
+          sourceConversationId: messaging[0].sender!.id,
           payload: webhookData,
         },
       })
@@ -144,8 +144,8 @@ const handleWebhookEvent = async (
 
     // Calculate integration identifier
     const integrationIdentifier = messaging[0].message?.is_echo
-      ? messaging[0].sender.id
-      : messaging[0].recipient.id
+      ? messaging[0].sender!.id
+      : messaging[0].recipient!.id
 
     await queue?.add("incomingMessage", {
       type: "incomingMessage",
