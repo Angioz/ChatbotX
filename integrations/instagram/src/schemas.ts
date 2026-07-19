@@ -109,8 +109,10 @@ export const instagramReferralSchema = z.object({
 export type InstagramReferral = z.infer<typeof instagramReferralSchema>
 
 export const instagramMessagingEventSchema = z.object({
-  sender: idSchema,
-  recipient: idSchema,
+  // Some event types (e.g. message_reactions) omit sender/recipient in production
+  // despite Meta docs showing them present — verified via live payload capture.
+  sender: idSchema.optional(),
+  recipient: idSchema.optional(),
   timestamp: z.number(),
   message: instagramMessageSchema.optional(),
   read: instagramReadSchema.optional(),
